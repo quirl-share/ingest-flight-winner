@@ -1,0 +1,12 @@
+{
+  "name": "quirl",
+  "description": "quirl",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "source:check": "sbt scalafmtCheck && sbt scapegoat && sbt scalastyle && sbt test",
+    "source:build": "sbt compile dist",
+    "docker:prepare": "docker-compose --build"
+  }
+}

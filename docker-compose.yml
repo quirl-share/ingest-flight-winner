@@ -1,0 +1,70 @@
+version: '3.3'
+
+services:
+
+  postgres:
+    image: postgres:11
+    environment:
+        POSTGRES_DB: quirl
+        POSTGRES_USER: quirl
+        POSTGRES_PASSWORD: admin
+    ports:
+        - "5432:5432"
+    expose:
+        - "5432"
+    restart: unless-stopped
+    networks:
+      - quirl-network
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    networks:
+      - quirl-network
+    ports:
+      - "2181:2181"
+
+  kafka:
+    container_name: kafka
+    image: wurstmeister/kafka:2.12-2.4.1
+    restart: 'no' # always, on-failure, unless-stopped
+    environment:
+      KAFKA_CREATE_TOPICS: "Topic1:2:1,Topic2:2:1"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    networks:
+      - quirl-network
+    ports:
+      - 9092:9092
+    expose:
+      - 9092
+
+  cassandra:
+    image: 'bitnami/cassandra:3'
+    ports:
+      - '7000:7000'
+      - '9042:9042'
+    volumes:
+      - 'cassandra_data:/bitnami'
+    environment:
+      - CASSANDRA_SEEDS=cassandra
+      - CASSANDRA_PASSWORD_SEEDER=yes
+      - CASSANDRA_PASSWORD=cassandra
+    networks:
+      - quirl-network
+
+  zeppelin:
+    image: 'apache/zeppelin:0.8.0'
+    ports:
+      - 8080:8080
+    volumes:
+      - ./notebook:/opt/zeppelin/notebook
+    networks:
+      - quirl-network
+    depends_on:
+      - cassandra
+
+volumes:
+  cassandra_data:
+    driver: local
+networks:
+  quirl-network:
+    driver: bridge
